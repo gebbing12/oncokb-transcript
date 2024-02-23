@@ -183,7 +183,7 @@ export class FirebaseGeneStore extends FirebaseReviewableCrudStore<Gene> {
     return summary;
   }
 
-  override updateReviewableContent(path: string, key: ExtractPathExpressions<Gene>, value: any) {
+  override updateReviewableContent(path: string, key: string, value: any) {
     try {
       return super.updateReviewableContent(path, key, value);
     } catch (error) {

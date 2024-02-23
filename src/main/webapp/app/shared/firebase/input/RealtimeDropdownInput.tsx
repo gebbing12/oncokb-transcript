@@ -11,7 +11,7 @@ import { getFirebasePath, getValueByNestedKey } from 'app/shared/util/firebase/f
 import { RealtimeBasicLabel } from './RealtimeBasicInput';
 
 export interface IRealtimeDropdownInput extends SelectProps, StoreProps {
-  fieldKey: ExtractPathExpressions<Gene>;
+  fieldKey: string;
   options: string[];
   labelClass?: string;
   label?: string;
@@ -48,7 +48,7 @@ const mapStoreToProps = ({ firebaseGeneStore }: IRootStore) => ({
 
 type StoreProps = {
   data?: Readonly<Gene>;
-  updateReviewableContent?: (path: string, key: ExtractPathExpressions<Gene>, value: any) => void;
+  updateReviewableContent?: (path: string, key: string, value: any) => void;
 };
 
 export default inject(mapStoreToProps)(RealtimeDropdownInput);

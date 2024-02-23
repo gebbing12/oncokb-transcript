@@ -9,12 +9,15 @@ import {
   TX_LEVELS,
   Tumor,
   Alteration,
+  DX_LEVELS,
+  PX_LEVELS,
 } from 'app/shared/model/firebase/firebase.model';
 import { replaceUrlParams } from '../url-utils';
 import { FB_COLLECTION_PATH } from 'app/config/constants/firebase';
 import { parseFirebaseGenePath } from './firebase-path-utils';
 import { NestLevelType, RemovableNestLevel } from 'app/pages/curation/collapsible/NestLevel';
 import { IDrug } from 'app/shared/model/drug.model';
+import mutations from 'app/pages/curation/Mutations';
 
 /* Convert a nested object into an object where the key is the path to the object.
   Example:
@@ -71,6 +74,59 @@ export const getMutationName = (mutation: Mutation) => {
   }
 };
 
+export const getMutationState = (mutation?: Mutation) => {
+  const stats = {
+    TT: 0,
+    oncogenicity: mutation?.mutation_effect.oncogenic,
+    mutationEffect: mutation?.mutation_effect.effect,
+    TTS: 0,
+    DxS: 0,
+    PxS: 0,
+    txLevels: {} as { [txLevel in TX_LEVELS]: number },
+    dxLevels: {} as { [dxLevel in DX_LEVELS]: number },
+    pxLevels: {} as { [pxLevel in PX_LEVELS]: number },
+  };
+  if (mutation?.tumors) {
+    mutation.tumors.forEach(tumor => {
+      stats.TT++;
+      if (tumor.summary) {
+        stats.TTS++;
+      }
+      if (tumor.diagnosticSummary) {
+        stats.DxS++;
+      }
+      if (tumor.prognosticSummary) {
+        stats.PxS++;
+      }
+      tumor.TIs.forEach(ti => {
+        if (ti.treatments) {
+          ti.treatments.forEach(treatment => {
+            if (!stats.txLevels[treatment.level]) {
+              stats.txLevels[treatment.level] = 1;
+            } else {
+              stats.txLevels[treatment.level]++;
+            }
+          });
+        }
+      });
+      if (tumor?.diagnostic?.level) {
+        if (!stats.dxLevels[tumor.diagnostic.level]) {
+          stats.dxLevels[tumor.diagnostic.level] = 1;
+        } else {
+          stats.dxLevels[tumor.diagnostic.level]++;
+        }
+      }
+      if (tumor?.prognostic?.level) {
+        if (!stats.dxLevels[tumor.prognostic.level]) {
+          stats.dxLevels[tumor.prognostic.level] = 1;
+        } else {
+          stats.dxLevels[tumor.prognostic.level]++;
+        }
+      }
+    });
+  }
+  return stats;
+};
 export const getTxName = (drugList: IDrug[], txUuidName: string) => {
   return txUuidName
     .split(',')

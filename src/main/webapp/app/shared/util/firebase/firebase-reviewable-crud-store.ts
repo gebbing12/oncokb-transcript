@@ -19,7 +19,7 @@ export class FirebaseReviewableCrudStore<T extends object> extends FirebaseCrudS
     });
   }
 
-  updateReviewableContent(path: string, key: ExtractPathExpressions<T>, value: any) {
+  updateReviewableContent(path: string, key: string, value: any) {
     // Update Review
     const reviewableKey = `${key as string}_review`;
     let review: Review = getValueByNestedKey(this.data, reviewableKey);

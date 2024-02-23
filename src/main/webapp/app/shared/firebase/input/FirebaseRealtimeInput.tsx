@@ -41,7 +41,7 @@ export const RealtimeRadioInput = (props: Omit<IRealtimeBasicInput, 'type'>) => 
  * Checked Input Group
  */
 export type RealtimeCheckedInputOption = {
-  fieldKey: ExtractPathExpressions<Gene>;
+  fieldKey: string;
   label: string;
 };
 

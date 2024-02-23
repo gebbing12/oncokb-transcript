@@ -17,7 +17,7 @@ export enum ALLELE_STATE {
   MOSAIC = 'Mosaic',
 }
 
-export const GENE_TYPE_KEY: { [key in GENE_TYPE]: ExtractPathExpressions<Gene> } = {
+export const GENE_TYPE_KEY: { [key in GENE_TYPE]: string } = {
   [GENE_TYPE.ONCOGENE]: 'type/ocg',
   [GENE_TYPE.TUMOR_SUPPRESSOR]: 'type/tsg',
 };

@@ -44,6 +44,7 @@ import CommentIcon from 'app/shared/icons/CommentIcon';
 import { HgncLink } from 'app/shared/links/HgncLink';
 import ReviewPage from './review/ReviewPage';
 import AddMutationButton from './button/AddMutationButton';
+import Mutations from 'app/pages/curation/Mutations';
 
 export interface ICurationPageProps extends StoreProps, RouteComponentProps<{ hugoSymbol: string }> {}
 
@@ -342,58 +343,7 @@ const CurationPage = (props: ICurationPageProps) => {
     return <>{button}</>;
   };
 
-  const mutationScrollContainerRef = useRef<HTMLDivElement>(null);
-
-  function getMutationCollapsibles() {
-    if (openMutationCollapsible) {
-      const mutation = mutations.find(mut => mut.name_uuid === openMutationCollapsible.name_uuid);
-      return (
-        <Row style={{ transition: 'height 0.5s, opacity 0.5s' }} className={'mb-2'}>
-          <Col>
-            <MutationCollapsible
-              open
-              onToggle={() => {
-                setOpenMutationCollapsible(null);
-              }}
-              mutation={mutation}
-              firebaseIndex={mutation.firebaseIndex}
-              parsedHistoryList={parsedHistoryList}
-              drugList={drugList}
-            />
-          </Col>
-        </Row>
-      );
-    }
-
-    return (
-      <div style={{ height: '550px', overflowY: 'auto', overflowX: 'hidden' }} ref={mutationScrollContainerRef}>
-        <ViewportList
-          viewportRef={mutationScrollContainerRef}
-          items={mutations}
-          initialIndex={mutationCollapsibleScrollIndex}
-          initialPrerender={10}
-        >
-          {(mutation, index) => (
-            <Row key={mutation.firebaseIndex} className={'mb-2'}>
-              <Col>
-                <MutationCollapsible
-                  onToggle={() => {
-                    setOpenMutationCollapsible(mutation);
-                    setMutationCollapsibleScrollIndex(index);
-                  }}
-                  mutation={mutation}
-                  firebaseIndex={mutation.firebaseIndex}
-                  parsedHistoryList={parsedHistoryList}
-                  drugList={drugList}
-                />
-              </Col>
-            </Row>
-          )}
-        </ViewportList>
-      </div>
-    );
-  }
-
+  console.log('CurationPage rendering');
   return !!props.data && drugList.length > 0 && !props.loadingGenes ? (
     <>
       <div>
@@ -589,224 +539,16 @@ const CurationPage = (props: ICurationPageProps) => {
                 </div>
               </Col>
             </Row>
-            {props.data.mutations ? (
-              <div className={'mb-5'}>
-                {openMutationCollapsible ? (
-                  <Row className="mb-4">
-                    <Col>
-                      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <span className={styles.link} onClick={() => setOpenMutationCollapsible(null)}>
-                          Mutations
-                        </span>
-                        <span className="px-2" style={{ color: '#6c757d' }}>
-                          /
-                        </span>
-                        <span>{openMutationCollapsible.name}</span>
-                      </div>
-                    </Col>
-                  </Row>
-                ) : (
-                  <Row>
-                    <Col>
-                      <div className={'d-flex justify-content-between align-items-center mb-2'}>
-                        <div className="mb-2 d-flex align-items-center">
-                          <h5 className="mb-0 mr-2">Mutations:</h5>{' '}
-                          <AddMutationButton
-                            showAddMutationModal={showAddMutationModal}
-                            onClickHandler={(show: boolean) => setShowAddMutationModal(!show)}
-                          />
-                          {mutationsAreFiltered && (
-                            <span>{`Showing ${mutations.length} of ${props.data.mutations.length} matching the search`}</span>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <FaFilter
-                            color={mutationsAreFiltered ? 'gold' : null}
-                            style={{ cursor: 'pointer' }}
-                            onClick={handleToggleFilterModal}
-                            className="mr-2"
-                            id="filter"
-                          />
-                          <Input
-                            placeholder={'Search Mutation'}
-                            value={mutationFilter}
-                            onChange={event => setMutationFilter(event.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                )}
-                {getMutationCollapsibles()}
-              </div>
-            ) : (
-              <AddMutationButton
-                showAddMutationModal={showAddMutationModal}
-                onClickHandler={(show: boolean) => setShowAddMutationModal(!show)}
-                showFullTitle
-                showIcon={false}
-              />
-            )}
+            <Mutations
+              db={props.db}
+              fieldKey={getFirebasePath('GENE', hugoSymbol) + '/mutations'}
+              drugList={drugList}
+              historyData={parsedHistoryList}
+            />
             <VusTable hugoSymbol={hugoSymbol} />
-            <Modal isOpen={showFilterModal} toggle={handleToggleFilterModal}>
-              <ModalHeader>
-                <Container>
-                  <Row>
-                    <Col>Filters</Col>
-                  </Row>
-                </Container>
-              </ModalHeader>
-              <ModalBody>
-                <Container>
-                  <h6 className="mb-2">Oncogenicity</h6>
-                  <Row>
-                    {tempOncogenicityFilter.map((filter, index) => {
-                      const isDisabled = !enabledCheckboxes.includes(filter.label);
-                      return (
-                        <Col className="col-6" key={filter.label}>
-                          <InputGroup>
-                            <Input
-                              id={`oncogenicity-filter-${filter.label}`}
-                              onChange={() => handleFilterCheckboxChange(index, setTempOncogenicityFilter)}
-                              checked={filter.selected}
-                              disabled={isDisabled}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: '0px' }}
-                              type="checkbox"
-                            />
-                            <Label
-                              for={`oncogenicity-filter-${filter.label}`}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: CHECKBOX_LABEL_LEFT_MARGIN }}
-                            >
-                              {filter.label}
-                            </Label>
-                          </InputGroup>
-                        </Col>
-                      );
-                    })}
-                  </Row>
-                  <h6 className="mb-2 mt-2">Mutation effect</h6>
-                  <Row>
-                    {tempMutationEffectFilter.map((filter, index) => {
-                      const isDisabled = !enabledCheckboxes.includes(filter.label);
-
-                      return (
-                        <Col className="col-6" key={filter.label}>
-                          <InputGroup>
-                            <Input
-                              id={`mutation-effect-filter-${filter.label}`}
-                              onChange={() => handleFilterCheckboxChange(index, setTempMutationEffectFilter)}
-                              checked={filter.selected}
-                              disabled={isDisabled}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: '0px' }}
-                              type="checkbox"
-                            />
-                            <Label
-                              for={`mutation-effect-filter-${filter.label}`}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: CHECKBOX_LABEL_LEFT_MARGIN }}
-                            >
-                              {filter.label}
-                            </Label>
-                          </InputGroup>
-                        </Col>
-                      );
-                    })}
-                  </Row>
-                  <h6 className="mb-2 mt-2">Therapeutic levels</h6>
-                  <Row className="align-items-start justify-content-start">
-                    {tempTxLevelFilter.map((filter, index) => {
-                      const isDisabled = !enabledCheckboxes.includes(filter.label);
-
-                      return (
-                        <Col style={{ flexGrow: 0 }} key={filter.label}>
-                          <InputGroup>
-                            <Input
-                              id={`tx-level-filter-${filter.label}`}
-                              onChange={() => handleFilterCheckboxChange(index, setTempTxLevelFilter)}
-                              checked={filter.selected}
-                              disabled={isDisabled}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: '0px' }}
-                              type="checkbox"
-                            />
-                            <Label
-                              for={`tx-level-filter-${filter.label}`}
-                              style={{ cursor: `${isDisabled ? null : 'pointer'}`, marginLeft: CHECKBOX_LABEL_LEFT_MARGIN }}
-                            >
-                              {filter.label}
-                            </Label>
-                          </InputGroup>
-                        </Col>
-                      );
-                    })}
-                  </Row>
-                  <Row className="justify-content-end">
-                    {showFilterModalCancelButton && (
-                      <Col className="px-0 mr-2" style={{ flexGrow: 0 }}>
-                        <Button
-                          outline
-                          color="danger"
-                          onClick={() => {
-                            setTempOncogenicityFilter(initFilterCheckboxState(ONCOGENICITY_OPTIONS));
-                            setTempMutationEffectFilter(initFilterCheckboxState(MUTATION_EFFECT_OPTIONS));
-                            setTempTxLevelFilter(initFilterCheckboxState(TX_LEVEL_OPTIONS));
-                          }}
-                        >
-                          Reset
-                        </Button>
-                      </Col>
-                    )}
-                    <Col className="px-0 mr-2" style={{ flexGrow: 0 }}>
-                      <Button
-                        color="primary"
-                        onClick={() => {
-                          setOncogenicityFilter(tempOncogenicityFilter);
-                          setMutationEffectFilter(tempMutationEffectFilter);
-                          setTxLevelFilter(tempTxLevelFilter);
-                          setShowFilterModal(false);
-                        }}
-                      >
-                        Confirm
-                      </Button>
-                    </Col>
-                    <Col className="px-0" style={{ flexGrow: 0 }}>
-                      <Button
-                        color="secondary"
-                        onClick={() => {
-                          setTempOncogenicityFilter(oncogenicityFilter);
-                          setTempMutationEffectFilter(mutationEffectFilter);
-                          setTempTxLevelFilter(txLevelFilter);
-                          setShowFilterModal(false);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </Col>
-                  </Row>
-                </Container>
-              </ModalBody>
-            </Modal>
           </>
         )}
       </div>
-      <AddMutationModal
-        hugoSymbol={hugoSymbol}
-        isOpen={showAddMutationModal}
-        onConfirm={async alterations => {
-          if (alterations.length > 0) {
-            const newMutation = new Mutation(alterations.map(alteration => alteration.alteration).join(', '));
-            newMutation.alterations = alterations;
-
-            try {
-              await props.updateMutations(`${firebaseGenePath}/mutations`, [newMutation]);
-            } catch (error) {
-              notifyError(error);
-            }
-          }
-          setShowAddMutationModal(show => !show);
-        }}
-        onCancel={() => {
-          setShowAddMutationModal(show => !show);
-        }}
-      />
       <OncoKBSidebar>
         <Tabs
           tabs={[
@@ -836,6 +578,7 @@ const mapStoreToProps = ({
   authStore,
   firebaseStore,
 }: IRootStore) => ({
+  db: firebaseGeneStore.db,
   searchGeneEntities: geneStore.searchEntities,
   geneEntities: geneStore.entities,
   loadingGenes: geneStore.loading,
