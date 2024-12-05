@@ -119,7 +119,12 @@ public class UserService {
                     .forEach(managedAuthorities::add);
                 Set<FeatureFlag> managedFeatureFlags = user.getFeatureFlags();
                 managedFeatureFlags.clear();
-                managedFeatureFlags.addAll(userDTO.getFeatureFlags());
+
+                Set<FeatureFlag> featureFlags = userDTO.getFeatureFlags();
+                if (featureFlags != null) {
+                    managedFeatureFlags.addAll(featureFlags);
+                }
+
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
                 return user;
